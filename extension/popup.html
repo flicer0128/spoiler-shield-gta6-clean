@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Spoiler Shield</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <header>
+    <img src="icons/icon48.png" alt="" width="28" height="28">
+    <div class="title">
+      <strong>Spoiler Shield</strong>
+      <span id="status">On</span>
+    </div>
+    <label class="switch" title="Turn on or off">
+      <input type="checkbox" id="enabled">
+      <span class="slider"></span>
+    </label>
+  </header>
+
+  <section>
+    <div class="row">
+      <div><span id="total">0</span> blocked on this page</div>
+      <button id="siteToggle" class="plain">Pause on this site</button>
+    </div>
+    <div class="levels-count">
+      <span class="dot l1"></span><span id="c1">0</span> possible
+      <span class="dot l2"></span><span id="c2">0</span> story
+      <span class="dot l3"></span><span id="c3">0</span> critical
+    </div>
+  </section>
+
+  <section>
+    <div class="label">Block from</div>
+    <div class="seg" id="minLevel">
+      <label><input type="radio" name="minLevel" value="1"><span class="l1">Possible</span></label>
+      <label><input type="radio" name="minLevel" value="2"><span class="l2">Story</span></label>
+      <label><input type="radio" name="minLevel" value="3"><span class="l3">Critical</span></label>
+    </div>
+    <p class="hint" id="minHint"></p>
+  </section>
+
+  <section>
+    <div class="label">Spoilers are</div>
+    <div class="seg mode">
+      <label><input type="radio" name="mode" value="blur"><span>Blurred</span></label>
+      <label><input type="radio" name="mode" value="hide"><span>Hidden</span></label>
+    </div>
+    <label class="check"><input type="checkbox" id="warnPages"> Warn before opening GTA 6 pages</label>
+    <label class="check"><input type="checkbox" id="useDefaultKeywords"> Use built-in word lists</label>
+  </section>
+
+  <section>
+    <div class="label">Your own words <span class="hint-inline">one per line, commas ok</span></div>
+    <p class="hint top">These always get blocked, whatever "Block from" is set to.</p>
+    <div class="custom">
+      <label><span class="bar l1"></span>Possible<textarea id="custom1" rows="2"></textarea></label>
+      <label><span class="bar l2"></span>Story<textarea id="custom2" rows="2"></textarea></label>
+      <label><span class="bar l3"></span>Critical<textarea id="custom3" rows="2" placeholder="e.g. a streamer's name"></textarea></label>
+    </div>
+    <div id="saved" class="saved">Saves automatically</div>
+  </section>
+
+  <footer>Runs entirely in your browser. Nothing is collected.</footer>
+  <script src="defaults.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>

@@ -1,0 +1,137 @@
+/* Spoiler Shield — page styles. Flat colors only. */
+
+[data-gss="blur"] {
+  position: relative !important;
+  overflow: hidden !important;
+  color: transparent !important;
+  text-shadow: 0 0 10px rgba(128, 128, 128, 0.85) !important;
+}
+[data-gss="blur"] > *:not(.gss-overlay) {
+  filter: blur(14px) !important;
+  pointer-events: none !important;
+  user-select: none !important;
+}
+[data-gss="hide"] {
+  display: none !important;
+}
+
+.gss-overlay {
+  --gss-c: #f2c230;
+  --gss-t: #111111;
+  position: absolute !important;
+  inset: 0 !important;
+  z-index: 2147483000 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  min-height: 28px !important;
+  background: rgba(17, 17, 17, 0.55) !important;
+  border-left: 4px solid var(--gss-c) !important;
+  cursor: pointer !important;
+  text-shadow: none !important;
+  filter: none !important;
+  pointer-events: auto !important;
+}
+[data-gss-level="story"] > .gss-overlay { --gss-c: #f08a24; --gss-t: #111111; }
+[data-gss-level="major"] > .gss-overlay { --gss-c: #d7263d; --gss-t: #ffffff; }
+
+.gss-tag {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  max-width: 94% !important;
+  padding: 5px 9px !important;
+  border-radius: 3px !important;
+  background: var(--gss-c) !important;
+  color: var(--gss-t) !important;
+  font: 12px/1.2 -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  text-shadow: none !important;
+  box-shadow: none !important;
+}
+.gss-tag strong {
+  font-weight: 700 !important;
+  color: inherit !important;
+}
+.gss-tag .gss-hint {
+  font-weight: 400 !important;
+  opacity: 0.8 !important;
+  color: inherit !important;
+}
+.gss-overlay:hover .gss-hint,
+.gss-overlay:focus .gss-hint {
+  opacity: 1 !important;
+  text-decoration: underline !important;
+}
+.gss-overlay:focus-visible {
+  outline: 2px solid var(--gss-c) !important;
+  outline-offset: -2px !important;
+}
+
+/* Full-page warning */
+#gss-interstitial {
+  --gss-c: #f2c230;
+  --gss-t: #111111;
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 2147483647 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  background: #151515 !important;
+  color: #f2f2f2 !important;
+  font: 15px/1.5 -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important;
+}
+#gss-interstitial[data-gss-level="story"] { --gss-c: #f08a24; --gss-t: #111111; }
+#gss-interstitial[data-gss-level="major"] { --gss-c: #d7263d; --gss-t: #ffffff; }
+#gss-interstitial .gss-card {
+  width: min(440px, 90vw) !important;
+  padding: 28px 32px !important;
+  background: #1f1f1f !important;
+  border: 1px solid #2c2c2c !important;
+  border-top: 6px solid var(--gss-c) !important;
+  border-radius: 4px !important;
+  text-align: left !important;
+}
+#gss-interstitial .gss-level {
+  display: inline-block !important;
+  margin-bottom: 14px !important;
+  padding: 3px 8px !important;
+  border-radius: 3px !important;
+  background: var(--gss-c) !important;
+  color: var(--gss-t) !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+}
+#gss-interstitial h1 {
+  margin: 0 0 6px !important;
+  font-size: 22px !important;
+  font-weight: 700 !important;
+  color: #ffffff !important;
+}
+#gss-interstitial p {
+  margin: 0 0 22px !important;
+  color: #b5b5b5 !important;
+}
+#gss-interstitial .gss-actions {
+  display: flex !important;
+  gap: 8px !important;
+}
+#gss-interstitial button {
+  padding: 9px 16px !important;
+  border-radius: 3px !important;
+  font: 600 14px -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important;
+  cursor: pointer !important;
+}
+#gss-interstitial .gss-back {
+  border: 1px solid #ffffff !important;
+  background: #ffffff !important;
+  color: #111111 !important;
+}
+#gss-interstitial .gss-show {
+  border: 1px solid #444444 !important;
+  background: transparent !important;
+  color: #dddddd !important;
+}
