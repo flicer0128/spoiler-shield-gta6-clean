@@ -27,14 +27,15 @@ YouTube (including Shorts and live chat), TikTok, Instagram, X/Twitter, Reddit, 
 
 **From the Chrome Web Store:** coming soon.
 
-**Manually (Chrome, Edge, Brave, Opera):**
+**Download (Chrome, Edge, Brave, Opera):**
 
-1. Download `spoiler-shield-gta6.zip` from the [latest release](../../releases/latest) and unzip it.
-2. Go to `chrome://extensions` and turn on **Developer mode** (top right).
-3. Click **Load unpacked** and select the unzipped folder.
-4. Pin Spoiler Shield from the puzzle-piece menu.
+1. **[Download spoiler-shield-gta6.zip](https://github.com/flicer0128/spoiler-shield-gta6/releases/latest/download/spoiler-shield-gta6.zip)**
+2. Unzip it. You'll get a folder called `spoiler-shield-gta6`. Move it somewhere permanent, like Documents.
+3. Go to `chrome://extensions` and turn on **Developer mode** (top right).
+4. Click **Load unpacked** and select the `spoiler-shield-gta6` folder.
+5. Pin Spoiler Shield from the puzzle-piece menu.
 
-Keep the folder where it is; Chrome loads the extension from it.
+Keep the folder where it is; Chrome loads the extension from it. To update, download the new zip, replace the folder, and click the reload arrow on the extension in `chrome://extensions`.
 
 ## How detection works
 
