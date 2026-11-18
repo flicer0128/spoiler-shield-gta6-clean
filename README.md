@@ -29,7 +29,7 @@ YouTube (including Shorts and live chat), TikTok, Instagram, X/Twitter, Reddit, 
 
 **Download (Chrome, Edge, Brave, Opera):**
 
-1. **[Download spoiler-shield-gta6.zip](https://github.com/flicer0128/spoiler-shield-gta6/releases/latest/download/spoiler-shield-gta6.zip)**
+1. **[Download spoiler-shield-gta6.zip](https://github.com/flicer0128/spoiler-shield-gta6/raw/main/download/spoiler-shield-gta6.zip)**
 2. Unzip it. You'll get a folder called `spoiler-shield-gta6`. Move it somewhere permanent, like Documents.
 3. Go to `chrome://extensions` and turn on **Developer mode** (top right).
 4. Click **Load unpacked** and select the `spoiler-shield-gta6` folder.
