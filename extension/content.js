@@ -129,22 +129,103 @@
   const isEditable = (el) => !!el.closest("textarea,input,[contenteditable=''],[contenteditable='true']");
   const isOurs = (el) => !!el.closest(".gss-overlay,#gss-interstitial");
 
+  // Page structure that must never be covered, even if it carries a GTA label
+  // (feeds, comment sections, main columns, sidebars, app shells).
+  const NEVER_SHIELD = [
+    "html", "body", "main", "nav", "header", "footer", "aside", "form",
+    "[role='main']", "[role='feed']", "[role='navigation']", "[role='banner']",
+    "[role='complementary']", "[role='contentinfo']", "[role='dialog']",
+    "shreddit-app", "shreddit-feed", "shreddit-comment-tree", "faceplate-batch", "faceplate-partial",
+    "ytd-app", "ytd-page-manager", "ytd-browse", "ytd-watch-flexy", "ytd-rich-grid-renderer",
+    "ytd-item-section-renderer", "ytd-section-list-renderer", "ytd-comments",
+    "#comments", "#contents", "#content", "#main", "#main-content"
+  ].join(",");
+
+  const hasCardInside = (el) => !!el.querySelector(CONTAINER_SELECTORS);
+
   function tooBig(el) {
-    if (el === document.body || el === document.documentElement) return true;
+    if (!el || el.matches(NEVER_SHIELD)) return true;
     const r = el.getBoundingClientRect();
-    return r.height > window.innerHeight * 0.9 && r.width > window.innerWidth * 0.8;
+    const vw = window.innerWidth, vh = window.innerHeight;
+    if (r.width > vw * 0.8 && r.height > vh * 0.9) return true;
+    // Covers most of the visible screen: a page section, not one post.
+    if (r.width * Math.min(r.height, vh) > vw * vh * 0.6) return true;
+    // Pinned headers, sidebars, chat docks: covering them breaks the page layout.
+    const pos = getComputedStyle(el).position;
+    return pos === "fixed" || pos === "sticky";
+  }
+
+  // A web component whose children are only shown through *named* slots
+  // (Reddit's shreddit-comment / shreddit-post). An overlay appended to it
+  // would never render, so we cover its slotted children instead.
+  function hidesChildren(el) {
+    const sr = el.shadowRoot;
+    return !!sr && !sr.querySelector("slot:not([name])");
+  }
+
+  // Cards directly inside `el` (not nested inside another card within it).
+  function topCards(el) {
+    return [...el.querySelectorAll(CONTAINER_SELECTORS)].filter((c) => {
+      const up = c.parentElement?.closest(CONTAINER_SELECTORS);
+      return !up || up === el || !el.contains(up);
+    });
+  }
+
+  // From `el`, the largest box inside `card` that holds no nested post/comment,
+  // so a comment's replies are never covered together with it.
+  function ownRegion(el, card) {
+    let cur = el;
+    while (cur.parentElement && cur.parentElement !== card && !hasCardInside(cur.parentElement)) cur = cur.parentElement;
+    return cur;
+  }
+
+  // Text of an element, ignoring our own labels and any nested posts/comments.
+  function textOf(el) {
+    if (!el) return "";
+    if (!hasCardInside(el) && !el.querySelector(".gss-overlay")) return el.textContent;
+    let out = "";
+    const w = document.createTreeWalker(el, NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT, {
+      acceptNode: (n) =>
+        n.nodeType === 1 && n !== el && (n.classList.contains("gss-overlay") || n.matches(CONTAINER_SELECTORS))
+          ? NodeFilter.FILTER_REJECT
+          : NodeFilter.FILTER_ACCEPT
+    });
+    let n;
+    while ((n = w.nextNode())) if (n.nodeType === 3) out += n.nodeValue + " ";
+    return out;
   }
 
   function findContainer(el) {
-    const card = el.closest(CONTAINER_SELECTORS);
-    if (card && !tooBig(card)) return card;
+    let card = el.closest(CONTAINER_SELECTORS);
+    if (card && tooBig(card)) card = null;
+
+    if (card) {
+      let target = card;
+      if (hidesChildren(card)) {
+        // Prefer a plain wrapper that holds just this one post (Reddit feed: <article><shreddit-post>).
+        const wrap = card.parentElement?.closest(CONTAINER_SELECTORS);
+        const tc = wrap && topCards(wrap);
+        target = wrap && tc.length === 1 && tc[0] === card && !hidesChildren(wrap) && !tooBig(wrap)
+          ? wrap
+          : el === card ? null : ownRegion(el, card);
+      } else if (hasCardInside(card)) {
+        target = el === card ? null : ownRegion(el, card);
+      }
+      if (target && !tooBig(target)) return target;
+    }
+
+    // No post/comment found: use the nearest block around the text, without
+    // ever growing it to include other posts or page structure.
     let block = el.closest(FALLBACK_BLOCK) || el;
     while (block.parentElement && block.parentElement !== document.body) {
       const d = getComputedStyle(block).display;
       if (d !== "inline" && d !== "contents") break;
-      block = block.parentElement;
+      const up = block.parentElement;
+      if (hasCardInside(up) || tooBig(up)) break;
+      block = up;
     }
-    return tooBig(block) ? null : block;
+    if (tooBig(block) || hasCardInside(block) || hidesChildren(block)) return null;
+    return block;
   }
 
   // ---------- shield / reveal ----------
@@ -154,8 +235,11 @@
 
   const SHIELDED_SEL = "[data-gss]";
 
+  const badHosts = new WeakSet();
+
   function shield(container, level, force) {
     if (!container || !level || revealed.has(container)) return;
+    if (container.matches(NEVER_SHIELD) || badHosts.has(container)) return;
     if (level < settings.minLevel && !force) return;
 
     const existing = shielded.get(container);
@@ -181,6 +265,22 @@
 
     shielded.set(container, level);
     applyShield(container);
+    checkOverlayVisible(container, level, force);
+  }
+
+  // If the label can't render inside this element (closed shadow DOM etc.),
+  // cover its children one by one instead, so nothing is blurred without a label.
+  function checkOverlayVisible(container, level, force) {
+    if (settings.mode === "hide") return;
+    const ov = container.querySelector(":scope > .gss-overlay");
+    if (!ov || ov.getClientRects().length || !container.getClientRects().length) return;
+    unshield(container);
+    badHosts.add(container);
+    for (const child of container.children) {
+      if (child.classList.contains("gss-overlay") || !child.textContent.trim()) continue;
+      if (child.matches(CONTAINER_SELECTORS)) continue; // replies get checked on their own
+      shield(child, level, force);
+    }
   }
 
   // Idempotent: (re)applies attributes, overlay and label for a shielded element.
@@ -283,13 +383,14 @@
     const cards = root.matches?.(CONTAINER_SELECTORS) ? [root] : [];
     root.querySelectorAll?.(CONTAINER_SELECTORS).forEach((c) => cards.push(c));
     for (const card of cards) {
-      if (revealed.has(card) || isOurs(card)) continue;
-      const text = card.textContent;
+      if (revealed.has(card) || isOurs(card) || shielded.has(card)) continue;
+      // Cards holding other posts/comments, or shadow-DOM cards, are handled
+      // per piece of text below so replies and threads aren't covered together.
+      if (hasCardInside(card) || hidesChildren(card)) continue;
+      const text = textOf(card);
       if (card.tagName === "LI" && text.length > 2000) continue;
       if (!isTrigger(text) || tooBig(card)) continue;
-      const inner = [...card.querySelectorAll(CONTAINER_SELECTORS)].reverse().find((c) => isTrigger(c.textContent));
-      const target = inner && !tooBig(inner) ? inner : card;
-      shield(target, levelOf(target.textContent), customHit(target.textContent));
+      shield(card, levelOf(text), customHit(text));
     }
 
     // 2) Text anywhere else.
@@ -304,8 +405,9 @@
     while ((n = walker.nextNode())) checkFrom(n.parentElement, n.nodeValue);
 
     // 3) Thumbnails and links: alt / title / aria-label.
-    root.querySelectorAll?.("img[alt],a[title],[aria-label]").forEach((el) => {
-      if (isOurs(el)) return;
+    const MEDIA = "img[alt],img[aria-label],a[title],a[aria-label],video[aria-label],[role='img'][aria-label],yt-image[aria-label]";
+    root.querySelectorAll?.(MEDIA).forEach((el) => {
+      if (isOurs(el) || hasCardInside(el)) return;
       const t = el.getAttribute("alt") || el.getAttribute("title") || el.getAttribute("aria-label");
       if (isTrigger(t)) checkFrom(el, t);
     });
@@ -313,16 +415,18 @@
 
   function checkFrom(el, text) {
     if (!el || isEditable(el) || isOurs(el)) return;
-    const card = el.closest(CONTAINER_SELECTORS);
-
-    // New text inside an already-shielded card (or a card with a trigger) may raise its level.
+    // New text inside an already-shielded item may raise its level.
     if (!isTrigger(text)) {
-      if (card && shielded.has(card)) shield(card, levelOf(card.textContent), customHit(card.textContent));
+      const sh = el.closest(SHIELDED_SEL);
+      if (sh && shielded.has(sh)) {
+        const t = textOf(sh);
+        shield(sh, levelOf(t), customHit(t));
+      }
       return;
     }
     const c = findContainer(el);
     if (!c) return;
-    const all = text + " " + c.textContent;
+    const all = text + " " + textOf(c);
     shield(c, Math.max(levelOf(text), levelOf(all)), customHit(all));
   }
 
